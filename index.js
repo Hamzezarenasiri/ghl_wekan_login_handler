@@ -17,7 +17,7 @@ const client = new MongoClient(mongoURI);
         const usersCollection = db.collection('users');
         const boardsCollection = db.collection('boards');
 
-        app.get('/', async (req, res) => {
+        app.get('/ghl_login', async (req, res) => {
             const { email, location_id } = req.query;
 
             if (!email || !location_id) {
