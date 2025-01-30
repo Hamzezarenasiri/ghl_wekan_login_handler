@@ -37,7 +37,7 @@ const client = new MongoClient(mongoURI);
                 }
 
                 // Find board using location_id
-                const board = await boardsCollection.findOne({ location_id });
+                const board = await boardsCollection.findOne({ location_id,"members.userId": user._id });
                 if (!board) {
                     return res.status(404).send('Board not found');
                 }
