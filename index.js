@@ -1,12 +1,51 @@
 import express from "express";
-import bodyParser from "body-parser";
-import { MongoClient } from "mongodb";;
+import {MongoClient} from "mongodb";
+
+;
 const app = express();
 const port = 8888;
 const DB_Name = "test"
 // MongoDB connection URI
 const mongoURI = "mongodb://tanha:FardapM5M5l5~KX5@flux.afarin.top:36017";
 const client = new MongoClient(mongoURI);
+let notFoundBoard = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>404 - Board Not Found</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 50px;
+      text-align: center;
+    }
+    .container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: inline-block;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    p {
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>404 - Board Not Found</h1>
+    <p>We couldn't find the board you're looking for.</p>
+  </div>
+</body>
+</html>
+`;
 
 (async () => {
     try {
@@ -18,7 +57,7 @@ const client = new MongoClient(mongoURI);
         const boardsCollection = db.collection('boards');
 
         app.get('/ghl_login', async (req, res) => {
-            const { email, location_id } = req.query;
+            const {email, location_id} = req.query;
 
             if (!email || !location_id) {
                 return res.status(400).send("Missing 'email' or 'location_id' parameter");
@@ -26,7 +65,7 @@ const client = new MongoClient(mongoURI);
 
             try {
                 // Find user by email
-                const user = await usersCollection.findOne({ "emails.address":email });
+                const user = await usersCollection.findOne({"emails.address": email});
                 if (!user) {
                     return res.status(404).send('User not found');
                 }
@@ -37,12 +76,12 @@ const client = new MongoClient(mongoURI);
                 }
 
                 // Find board using location_id
-                const board = await boardsCollection.findOne({ location_id,"members.userId": user._id });
+                const board = await boardsCollection.findOne({location_id, "members.userId": user._id});
                 if (!board) {
-                    return res.status(404).send('Board not found');
+                    return res.status(404).send(notFoundBoard);
                 }
 
-                const { _id, slug } = board;
+                const {_id, slug} = board;
                 if (!_id || !slug) {
                     return res.status(404).send('Board data incomplete');
                 }
