@@ -1,8 +1,7 @@
 import express from "express";
 import {MongoClient} from "mongodb";
+import axios from 'axios';
 
-;
-const app = express();
 const port = 8888;
 const DB_Name = "test"
 // MongoDB connection URI
@@ -237,12 +236,32 @@ const serverError = `
 </body>
 </html>
 `;
+const app = express();
+const postData = async (url, body, headers = {}) => {
+    try {
+        const response = await axios.post(url, body, { headers });
+        return response.data;
+    } catch (error) {
+        console.error('API call error:', error);
+        throw error;
+    }
+};
+const fetchData = async (url, params = {}) => {
+    try {
+        const response = await axios.get(url, { params });
+        return response.data;
+    } catch (error) {
+        console.error('API call error:', error);
+        throw error;
+    }
+};
+
+
 
 (async () => {
     try {
         await client.connect();
         console.log('Connected to MongoDB');
-
         const db = client.db(DB_Name);
         const usersCollection = db.collection('users');
         const boardsCollection = db.collection('boards');
@@ -250,41 +269,30 @@ const serverError = `
         app.get('/ghl_login', async (req, res) => {
             const {email, location_id} = req.query;
 
-            if (!email || !location_id) {
-                return res.status(400).send(BadRequestEmailLocationNOtFound);
-            }
+            if (!email || !location_id) {return res.status(400).send(BadRequestEmailLocationNOtFound);}
 
             try {
-                // Find user by email
                 const user = await usersCollection.findOne({"emails.address": email});
-                if (!user) {
-                    return res.status(404).send(UserNotFound);
-                }
+                if (!user) {return res.status(404).send(UserNotFound);}
 
-                const token = user.token;
-                if (!token) {
+                // const token = user.token;
+                const wekan_response =await postData('https://flux-wekan.afarin.top/users/login', { email,
+                    password:"BehtrinPasswordDonya",},{
+                    "Content-type":"application/json",
+                    "Authorization":"Bearer 3IB7lagm3R4UK8HHPyjykz2uRpGI-6LA_mET3l-USqr"
+                });
+                console.log(wekan_response)
+                const token = wekan_response.token
+                if (!token) {return res.status(404).send(userTokenFotFound);}
 
-                    return res.status(404).send(userTokenFotFound);
-                }
-
-                // Find board using location_id
                 const board = await boardsCollection.findOne({location_id, "members.userId": user._id});
-                if (!board) {
-                    return res.status(404).send(notFoundBoard);
-                }
+                if (!board) {return res.status(404).send(notFoundBoard);}
 
                 const {_id, slug} = board;
-                if (!_id || !slug) {
-                    return res.status(404).send(boardDataEnCompleted);
-                }
+                if (!_id || !slug) {return res.status(404).send(boardDataEnCompleted);}
 
-                // Send a response with JavaScript for localStorage and redirection
-                res.send(`
-          <script>
-            localStorage.setItem('Meteor.loginToken', '${token}');
-            window.location.href = '/b/${_id}/${slug}';
-          </script>
-        `);
+                res.send(`<script> localStorage.setItem('Meteor.loginToken', '${token}');
+                                window.location.href = '/b/${_id}/${slug}';</script>`);
             } catch (error) {
                 console.error(error);
                 res.status(500).send(serverError);
