@@ -285,8 +285,22 @@ const fetchData = async (url, params = {}) => {
                 const token = wekan_response.token
                 if (!token) {return res.status(404).send(userTokenFotFound);}
 
-                const board = await boardsCollection.findOne({location_id, "members.userId": user._id});
-                if (!board) {return res.status(404).send(notFoundBoard);}
+                let board = await boardsCollection.findOne({location_id, "members.userId": user._id});
+                if (!board) {
+                    await boardsCollection.updateOne({location_id},{
+                        "$push":{
+                            "userId" : user?.id || user?._id,
+                            "isAdmin" : false,
+                            "isActive" : true,
+                            "isNoComments" : false,
+                            "isCommentOnly" : true,
+                            "isWorker" : false
+                        }
+                    })
+                    let board = await boardsCollection.findOne({location_id, "members.userId": user._id});
+                    if (!board) {
+                    return res.status(404).send(notFoundBoard);}
+                }
 
                 const {_id, slug} = board;
                 if (!_id || !slug) {return res.status(404).send(boardDataEnCompleted);}
