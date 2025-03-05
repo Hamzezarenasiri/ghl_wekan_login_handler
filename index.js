@@ -288,16 +288,17 @@ const fetchData = async (url, params = {}) => {
                 let board = await boardsCollection.findOne({location_id, "members.userId": user._id});
                 if (!board) {
                     await boardsCollection.updateOne({location_id},{
-                        "$push":{
-                            "userId" : user?.id || user?._id,
-                            "isAdmin" : false,
-                            "isActive" : true,
-                            "isNoComments" : false,
-                            "isCommentOnly" : true,
-                            "isWorker" : false
-                        }
+                        "$addToSet":{"members":{
+                                "userId" : user?.id || user?._id,
+                                "isAdmin" : false,
+                                "isActive" : true,
+                                "isNoComments" : false,
+                                "isCommentOnly" : true,
+                                "isWorker" : false
+                            }}
                     })
-                    let board = await boardsCollection.findOne({location_id, "members.userId": user._id});
+                    board = await boardsCollection.findOne({location_id, "members.userId": user._id});
+                    // console.log(updateBoard,user,board)
                     if (!board) {
                     return res.status(404).send(notFoundBoard);}
                 }
