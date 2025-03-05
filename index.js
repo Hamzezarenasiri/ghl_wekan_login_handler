@@ -281,7 +281,7 @@ const fetchData = async (url, params = {}) => {
                     "Content-type":"application/json",
                     "Authorization":"Bearer 3IB7lagm3R4UK8HHPyjykz2uRpGI-6LA_mET3l-USqr"
                 });
-                console.log(wekan_response)
+                // console.log(wekan_response)
                 const token = wekan_response.token
                 if (!token) {return res.status(404).send(userTokenFotFound);}
 
